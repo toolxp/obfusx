@@ -29,7 +29,7 @@ ObfusX 是一个纯 JavaScript 实现的 HTML 混淆工具，零依赖、零构�
 - Domain Lock / 域名锁定与跳转
 - Watermark Injection / 水印保护
 
-<a href="https://obfusx.toolxp.com" target="_blank">🔗 Live Demo / 在线演示</a>
+🔗 [Live Demo / 在线演示](https://obfusx.toolxp.com)
 
 ### 🧪 Tool Interface (English)
 ![ObfusX English UI](./assets/obfusx-ui-en.png)
