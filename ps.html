@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ObfusX - HTML 防护混淆器</title>
+<meta name="description" content="ObfusX 是零依赖的 HTML 混淆器，纯前端运行，支持 DOM 干扰、反调试、链接伪装与隐形签名，为网页源码与原创内容提供强力防护，适合开发者与内容创作者。">
+<meta name="keywords" content="ObfusX,HTML混淆,网页保护,反调试,DOM干扰,水印保护,源码加密">
+<meta name="author" content="ObfusX">
+<link rel="canonical" href="https://obfusx.toolxp.com/zh">
+<link rel="alternate" hreflang="zh" href="https://obfusx.toolxp.com/zh">
+<link rel="alternate" hreflang="en" href="https://obfusx.toolxp.com/">
+<link rel="alternate" hreflang="x-default" href="https://obfusx.toolxp.com">
+<link rel="icon" href="https://obfusx.907000.xyz/obfusx-logo.png" type="image/png">
+
+<link rel="preconnect" href="https://obfusx.907000.xyz">
+<!--
+<!-- 加载CDN -->
+<script defer src="https://obfusx.907000.xyz/obfusx0.min.js" onload="
+  DisableDevtool({
+    disableMenu:false,
+    disableSelect:false,
+    disableCopy:false,
+    disableCut:false,
+    disablePaste:false,
+    disableInputSelect:false,
+    clearLog:true,
+    detectors:[0,1,2,3,4,5,6,7],
+    ondevtoolopen(type,next){
+      console.warn('DevTools opened via mode:', type);
+      next();
+    }
+  });
+"></script>
+-->
+
+<!-- 加载css -->
+<!--
+<script>fetch('https://obfusx.907000.xyz/obfusx.css').then(response=>response.text()).then(cssContent=>{const blob=new Blob([cssContent],{type:'text/css'});const url=URL.createObjectURL(blob);const link=document.createElement('link');link.rel='stylesheet';link.href=url;document.head.appendChild(link);}).catch(error=>console.error('加载 CSS 文件失败:',error));</script>
+-->
+<link rel="stylesheet" href="https://obfusx.907000.xyz/obfusx.css">
+
+<!-- 软件信息结构化数据 -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "inLanguage": "zh",
+  "name": "ObfusX",
+  "operatingSystem": "Web",
+  "applicationCategory": "DeveloperTool",
+  "url": "https://obfusx.toolxp.com/zh",
+  "description": "ObfusX 是 HTML 防护混淆工具，支持 DOM 干扰、反调试、链接与文本伪装、标签与 ID 变异、速率限制、水印保护、隐形签名标记、快捷键禁用、开发者工具干扰、域名锁定与未授权重定向等功能，帮助开发者防止网页源码泄露、内容抓取与非法嵌套访问，适用于前端安全防护与知识产权保护。",
+  "creator": {
+    "@type": "Organization",
+    "name": "ObfusX"
+  }
+}
+</script>
+
+<!-- 常见问题结构化数据 -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "ObfusX 是否会存储我的源码？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "不会。ObfusX 是纯前端工具，所有处理过程都在你的浏览器本地完成，不会上传或存储任何源码。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "混淆后是否就绝对安全了？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "不是。ObfusX 可以显著提升源码的逆向难度，但并不意味着“绝对防护”。任何在浏览器中运行的 JavaScript 都必须被浏览器引擎解析执行，因此理论上仍可被有经验的人逆向分析。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "为什么混淆后的代码比原始源代码大？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "ObfusX 使用多种不同的混淆方式保护你的代码，混淆后的代码体积肯定会增加，这是正常现象。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "混淆是否影响 SEO？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "文本拆解伪装、标签语义变异、链接伪装、字符扰乱、锚点干扰这几个混淆项可能影响爬虫解析，建议根据实际需求选择。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "混淆后能还原代码吗？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "ObfusX 的混淆是不可逆的，无法自动还原为原始源码。请在混淆前备份原始文件。"
+      }
+    }
+  ]
+}
+</script>
+
+
+<!-- ✅ JS AST 工具：解析、遍历、生成 -->
+<script defer src="https://obfusx.907000.xyz/obfusx1.min.js"></script>
+<script defer src="https://obfusx.907000.xyz/obfusx2.min.js"></script>
+<script defer src="https://obfusx.907000.xyz/obfusx3.min.js"></script>
+
+
+<div class="tTpB" id="backTop" onclick="scrollToTop()">
+  <svg viewBox="0 0 34 34">
+    <circle class="b" cx="17" cy="17" r="15.92"></circle>
+    <circle class="c scrollProgress" cx="17" cy="17" r="15.92"></circle>
+    <path class="line d" d="M15.07,21.06,19.16,17l-4.09-4.06"></path>
+  </svg>
+</div>
+
+
+</head>
+
+<body>
+
+<noscript>
+  <meta http-equiv="refresh" content="0;url=https://example.com">
+</noscript>
+
+
+
+    <nav class="navbar">
+        <div class="navbar-header">
+            <div class="sitename">ObfusX</div> <button class="nav-toggle" onclick="toggleNav()">☰</button>
+        </div>
+        <div class="nav-links" id="navMenu"> 
+
+
+<a href="https://obfusx.toolxp.com">EN</a>
+
+
+</div>
+    </nav>
+
+    <div class="main-content"><!-- 通用样式 -->
+ 
+<section class="intro-banner">
+  <h1>ObfusX - 强大且轻量的 HTML 防护混淆器</h1>
+  <p><strong>ObfusX 是一款 零依赖、纯前端 的网页混淆防护工具，由原生 JavaScript 实现，无后端、无框架。</strong></p>
+
+<p>在<strong>不影响用户交互</strong> 的前提下，ObfusX 通过对结构层混淆和行为层的防护，能有效提升网页内容的 <strong>抗复制、抗调试、抗抓取</strong> 能力，为你的原创页面提供强力保护。</p>
+</section>
+
+
+
+<div class="container">
+  <h2>⚙ ObfusX 控制面板</h2>
+
+  <div class="input-section">
+    <textarea id="codeInput" placeholder="&#10; 🟢 粘贴你的 HTML 完整网页代码（包含完整标签）&#10; 🟡 ObfusX 不会检测你的代码是否有语义错误，嵌套标签是否完整，请确保代码有效。"></textarea>
+  </div>
+
+<div class="button-group">
+<button id="obfuscateBtn" aria-label="开始混淆 HTML 代码">开始混淆</button>
+<button id="copyBtn" aria-label="复制混淆后的代码">复制代码</button>
+<button id="clearBtn" aria-label="清除输入框中的 HTML 代码">清除代码</button>
+
+</div>
+
+
+  
+
+  <div class="options-container">
+
+
+
+
+<div class="options-container" id="sortableOptions"><!-- 拖拽 -->
+
+
+
+<div class="option-group">
+  <h3>默认选项</h3>
+  <div class="option-item">
+    <input type="checkbox" id="optionCompact" checked onclick="return false;" style="accent-color: #ff6000;">
+    <label for="optionCompact">快速混淆</label>
+  </div>
+</div>
+
+<div class="option-group">
+  <h3>文本拆解伪装</h3>
+  <div class="option-item">
+    <input type="checkbox" id="optionTextObfuscation">
+    <label for="optionTextObfuscation">伪装 &#x3C;body&#x3E; 内所有静态文本</label>
+  </div>
+</div>
+
+<div class="option-group">
+  <h3>随机属性</h3>
+  <div class="option-item">
+    <input type="checkbox" id="optionDomMutation">
+    <label for="optionDomMutation">全局注入随机属性与伪类名</label>
+  </div>
+</div>
+
+<div class="option-group">
+  <h3>标签语义变异</h3>
+  <div class="option-item">
+    <input type="checkbox" id="enableTagObfuscation">
+    <label for="enableTagObfuscation">全层替换标准静态 HTML 标签和对应的 CSS 选择器</label>
+  </div>
+</div>
+
+<div class="option-group">
+  <h3>ID 替换变异</h3>
+  <div class="option-item">
+    <input type="checkbox" id="optionIdVariation">
+    <label for="optionIdVariation">替换所有静态 HTML 中的 ID，并更新引用选择器</label>
+  </div>
+</div>
+
+
+<div class="option-group">
+  <h3>隐形签名</h3>
+  <div class="option-item">
+    <input type="checkbox" id="enableHashLock">
+    <label for="enableHashLock">启用隐形签名标记</label>
+  </div>
+  <div class="option-item">
+    <input type="text" id="hashLockKey" placeholder="请输入自定义签名" maxlength="50">
+  </div>
+</div>
+
+
+<div class="option-group">
+  <h3>链接伪装</h3>
+  <div class="option-item">
+    <input type="checkbox" id="optionLinkObfuscation">
+    <label for="optionLinkObfuscation">&#x3C;a&#x3E; 标签伪装，仅作用于标准链接</label>
+  </div>
+</div>
+
+
+
+<div class="option-group">
+  <h3>假元素</h3>
+  <div class="option-item">
+    <input type="checkbox" id="optionVisualDisrupt">
+    <label for="optionVisualDisrupt">注入虚假元素</label>
+  </div>
+</div>
+
+<div class="option-group">
+  <h3>锚点干扰</h3>
+  <div class="option-item">
+    <input type="checkbox" id="optionAnchorDisrupt">
+    <label for="optionAnchorDisrupt">注入伪 ID 和空锚点</label>
+  </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="option-group">
+  <h3>模块化</h3>
+  <div class="option-item">
+    <input type="checkbox" id="optionSplitLoader">
+    <label for="optionSplitLoader">脚本结构分离</label>
+  </div>
+</div>
+
+<div class="option-group">
+  <h3>字符扰乱</h3>
+  <div class="option-item">
+    <input type="checkbox" id="enableGhostLayer">
+    <label for="enableGhostLayer">随机注入 DOM 不可见字符</label>
+  </div>
+</div>
+
+<div class="option-group">
+  <h3>快捷键</h3>
+  <div class="option-item">
+    <input type="checkbox" id="optionBlockShortcuts">
+    <label for="optionBlockShortcuts">禁用常见快捷键</label>
+  </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="option-group">
+  <h3>防嵌套访问保护</h3>
+  <div class="option-item">
+    <input type="checkbox" id="optionFrameBlock">
+    <label for="optionFrameBlock">禁止页面被嵌入 iframe / object</label>
+  </div>
+</div>
+
+<div class="option-group">
+  <h3>干扰开发者工具</h3>
+  <div class="option-item">
+    <input type="checkbox" id="optionCloseDevTools">
+    <label for="optionCloseDevTools">重度干扰或关闭开发者工具</label>
+  </div>
+</div>
+
+<div class="option-group">
+  <h3>下载防护</h3>
+  <div class="option-item">
+    <input type="checkbox" id="optionPreventDownload">
+    <label for="optionPreventDownload">使浏览器无法另存外部 .css / .js 文件</label>
+  </div>
+</div>
+
+<div class="option-group">
+  <h3>访问速率限制</h3>
+  <div class="option-item">
+    <input type="checkbox" id="enableRateLimit">
+    <label for="enableRateLimit">启用速率限制</label>
+  </div>
+  <div class="option-item">
+    <input type="number" id="accessWindow" placeholder="时间窗口（秒）" value="">
+    <input type="number" id="maxAccessCount" placeholder="最大允许次数" value="">
+    <input type="number" id="blockDuration" placeholder="封锁时间（秒）" value="">
+  </div>
+</div>
+
+<div class="option-group">
+  <h3>域名锁定</h3>
+  <div class="option-item">
+    <input type="checkbox" id="enableDomainLock">
+    <label for="enableDomainLock">启用域名锁定，多个域名用逗号分隔</label>
+  </div>
+  <div class="option-item">
+    <label for="optionDomainLock"></label>
+    <input type="text" id="optionDomainLock" placeholder="例如：example.com,sub.example.com">
+  </div>
+  <div class="option-item">
+    <label for="optionDomainLockRedirectUrl">未授权重定向 URL</label>
+    <input type="text" id="optionDomainLockRedirectUrl" placeholder="例如：https://example.com/unauthorized.html">
+  </div>
+</div>
+
+<div class="option-group">
+  <h3>水印保护</h3>
+  <div class="option-item">
+    <input type="checkbox" id="enableWatermark">
+    <label for="enableWatermark">添加页面水印背景</label>
+  </div>
+  <div class="option-item">
+    <input type="text" id="watermarkText" maxlength="50" placeholder="请输入水印内容">
+  </div>
+</div>
+
+
+
+
+
+
+
+
+</div><!-- 拖拽 -->
+  </div>
+</div>
+
+
+
+
+
+<!-- 功能描述板块 -->
+
+<section>
+  <h2 style="margin-top: 70px;">📑 混淆功能说明</h2>
+  <div class="feature-description-container">
+
+    <div class="feature-item">
+      <h3>🔹 默认选项</h3>
+      <p><strong>说明：</strong>会默认启用清除注释、压缩。并随机使用3~6种混淆，比如：控制流重构、回调函数包装、分步调度注入、分支延迟执行、RC4 字符串编码、全局变量重命名、反调试、自我防御保护和对象密钥混淆等等。</p>
+      <p><strong>效果：</strong>适用于大多数网页内容的快速保护。</p>
+      <p><strong>🟡 注意：</strong>默认混淆不会隐藏 DOM 结构，仅封装源码。若需进一步的防护，需要结合其他功能选项。</p>
+    </div>
+
+    <div class="feature-item">
+      <h3>🔹 文本拆解伪装</h3>
+      <p><strong>说明：</strong>将 <code>&lt;body&gt;</code> 内的所有静态文本拆分为多个自定义节点 <code>&lt;obfusx&gt;</code>，避免真实文本出现在 DOM 中。</p>
+      <p><strong>效果：</strong>让复制者抓不到重点，让爬虫只能抓到噪声，提升文本内容防护强度。</p>
+    </div>
+
+    <div class="feature-item">
+      <h3>🔹 随机属性注入</h3>
+      <p><strong>说明：</strong>在 DOM 元素中插入随机生成的属性名与伪类名，制造结构噪声，增加样式与脚本的定位难度。</p>
+      <p><strong>效果：</strong>干扰选择器定位与样式分析，提升混淆复杂度。</p>
+    </div>
+
+    <div class="feature-item">
+      <h3>🔹 标签语义变异</h3>
+      <p><strong>说明：</strong>将标准标签（如 <code>&lt;div&gt;</code>）替换为无语义标签（如 <code>&lt;obfusx-com&gt;</code>）。</p>
+      <p><strong>效果：</strong>打乱语义结构，干扰自动化识别与样式匹配。</p>
+    </div>
+
+    <div class="feature-item">
+      <h3>🔹 ID 替换变异</h3>
+      <p><strong>说明：</strong>使用哈希或随机字符串替换所有静态 ID。</p>
+      <p><strong>效果：</strong>防止通过 ID 快速定位关键元素，提升结构防护。</p>
+    </div>
+
+    <div class="feature-item">
+      <h3>🔹 隐形签名</h3>
+      <p><strong>说明：</strong>在 DOM 中注入不可见的自定义签名内容，携带唯一签名标识，可通过代码查询验证。</p>
+      <p><strong>效果：</strong>用于原创内容的追踪与归属验证。</p>
+      <p><strong>查询方法：</strong>复制下列代码在控制台查询</p>
+
+<div class="tishi7">
+    <div class="icon">
+<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24"><path fill="#fff" d="M7.5 15q-.625 0-1.062-.437T6 13.5v-1h1.5v1H9V9h1.5v4.5q0 .625-.437 1.063T9 15zm5.5 0q-.425 0-.712-.288T12 14v-1h1.5v.5h2v-1H13q-.425 0-.712-.288T12 11.5V10q0-.425.288-.712T13 9h3q.425 0 .713.288T17 10v1h-1.5v-.5h-2v1H16q.425 0 .713.288T17 12.5V14q0 .425-.288.713T16 15z"/></svg>
+</div><div class="content">
+<pre><code>getComputedStyle(document.documentElement).getPropertyValue("--obfusx-signature")
+
+<span id="// 你的签名会显示在这里" class="flash" style="font-weight: bold; color: #5b5b5b;">// 你的签名会显示在这里</span>
+</code></pre>
+<div class="bottom-border"></div></div></div>
+    </div>
+
+    <div class="feature-item">
+      <h3>🔹 链接伪装</h3>
+      <p><strong>说明：</strong>通过修改 <code>&lt;a&gt;</code> 标签的 href、rel、target 等属性，或嵌套无效子元素，干扰链接的语义识别与爬虫解析。</p>
+      <p><strong>效果：</strong>防止链接被直接识别、抓取或镜像。</p>
+    </div>
+
+    <div class="feature-item">
+      <h3>🔹 假元素</h3>
+      <p><strong>说明：</strong>在关键节点附近插入无功能的 DOM 元素，赋予干扰性 ID 或类名，模拟真实结构。</p>
+      <p><strong>效果：</strong>增加页面节点数量，干扰结构解析与调试工具。</p>
+    </div>
+
+    <div class="feature-item">
+      <h3>🔹 锚点干扰</h3>
+      <p><strong>说明：</strong>注入空锚点与伪造 ID，干扰浏览器定位与爬虫跳转逻辑。</p>
+      <p><strong>效果：</strong>打乱页面定位逻辑，干扰自动跳转与爬虫锚点识别。</p>
+    </div>
+
+    <div class="feature-item">
+      <h3>🔹 模块化</h3>
+      <p><strong>说明：</strong>将脚本逻辑拆分为多个函数模块，并打乱执行顺序与命名。</p>
+      <p><strong>效果：</strong>提升代码不可逆性，增加分析难度。</p>
+    </div>
+
+<div class="feature-item">
+  <h3>🔹 字符扰乱</h3>
+  <p><strong>说明：</strong>在文本节点中插入零宽字符（如 <code>\u200B</code>、<code>\u200C</code>），制造语义差异，干扰解析与匹配。</p>
+  <p><strong>效果：</strong>阻碍复制、粘贴与选择器定位，提升内容的抗提取性与防抓取能力。</p>
+  <p><strong>🟡 注意：</strong>启用“文本拆解伪装”时，该功能将自动关闭以避免冲突。</p>
+  <p><strong>查询方法：</strong>复制下列代码在控制台查询</p>
+
+<div class="tishi7">
+    <div class="icon">
+<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24"><path fill="#fff" d="M7.5 15q-.625 0-1.062-.437T6 13.5v-1h1.5v1H9V9h1.5v4.5q0 .625-.437 1.063T9 15zm5.5 0q-.425 0-.712-.288T12 14v-1h1.5v.5h2v-1H13q-.425 0-.712-.288T12 11.5V10q0-.425.288-.712T13 9h3q.425 0 .713.288T17 10v1h-1.5v-.5h-2v1H16q.425 0 .713.288T17 12.5V14q0 .425-.288.713T16 15z"/></svg>
+</div><div class="content">
+<pre><code>const node = document.querySelector('body'); // 或其他包含静态文本的元素 如 &#x3C;html&#x3E;
+if (node) {
+  const codes = [...node.textContent].map(c => c.charCodeAt(0));
+  console.log("字符码位:", codes);
+  console.log("字符个数:", codes.length);
+
+  const hasGhost = codes.filter(c => c === 8291).length;
+  console.log("幽灵字符数量:", hasGhost);
+}
+
+<span id="// 插入的字符会显示在这里" class="flash" style="font-weight: bold; color: #5b5b5b;">// 插入的字符会显示在这里</span>
+</code></pre>
+<div class="bottom-border"></div></div></div>
+
+</div>
+
+
+    <div class="feature-item">
+      <h3>🔹 快捷键</h3>
+      <p><strong>说明：</strong>监听键盘事件并阻止默认行为，屏蔽一些常用基本快捷键。</p>
+      <p><strong>效果：</strong>有效阻止非技术用户快速进入开发者工具或克隆你的内容。</p>
+    </div>
+
+
+
+    <div class="feature-item">
+      <h3>🔹 防嵌套访问保护</h3>
+      <p><strong>说明：</strong>检测 <code>window.top !== window.self</code> 并强制跳转或阻止渲染，防止 iframe 嵌套。</p>
+      <p><strong>效果：</strong>防止盗链、嵌套调用与恶意嵌入。</p>
+    </div>
+
+    <div class="feature-item">
+      <h3>🔹 干扰开发者工具</h3>
+<p><strong>说明：</strong>ObfusX 会通过检测 <code>RegExp</code>、<code>Date</code> 和 <code>Function</code> 等原生对象的 <code>toString()</code> 方法是否被代理或篡改，结合 <code>performance.now()</code> 判断是否被调试器挂起，并监听窗口判断 <code>outerWidth - innerWidth</code> 是否超过阈值等方法，尝试检测并干扰开发者工具的使用。</p>
+      <p><strong>效果：</strong>在绝大多数浏览器环境中，能有效中断调试流程，清空页面内容，或触发跳转。即使页面未被关闭，也只能看到由 ObfusX 混淆后的代码。</p>
+    </div>
+
+    <div class="feature-item">
+      <h3>🔹 下载防护</h3>
+      <p><strong>说明：</strong>通过 CSP 或动态加载方式阻止外部 <code>.css</code> / <code>.js</code> 文件被直接保存。</p>
+      <p><strong>效果：</strong>使 游览器另存为 无法直接下载你的文件，保护你的外部静态文件。</p>
+    </div>
+
+    <div class="feature-item">
+      <h3>🔹 访问速率限制</h3>
+      <p><strong>说明：</strong>记录访问时间戳与频率，超出阈值后触发封锁逻辑。</p>
+      <p><strong>效果：</strong>防止高频爬虫或恶意刷新行为。</p>
+    </div>
+
+    <div class="feature-item">
+      <h3>🔹 域名锁定并重定向</h3>
+      <p><strong>说明：</strong>检测当前访问域名是否在白名单中，非法域名触发跳转或阻止渲染。</p>
+      <p><strong>效果：</strong>防止非法镜像、盗链与跨域调用。</p>
+    </div>
+
+    <div class="feature-item">
+      <h3>🔹 水印保护</h3>
+      <p><strong>说明：</strong>通过 CSS 背景图层或伪元素插入水印文字。</p>
+      <p><strong>效果：</strong>提升内容归属感，增强视觉防复制效果。</p>
+    </div>
+
+
+
+  </div>
+</section>
+
+
+
+
+
+
+
+
+
+<section class="faq-section">
+  <h2>❓常见问题解答（FAQ）</h2>
+  <div class="faq">
+
+    <details>
+      <summary>ObfusX 是否会存储我的源码？</summary>
+      <p>不会。ObfusX 是纯前端工具，所有处理过程都在你的浏览器本地完成，不会上传或存储你的源码。</p>
+    </details>
+
+<details>
+  <summary>混淆后是否就绝对安全了？</summary>
+  <p>不是。任何在浏览器中运行的 JavaScript 都必须被解析执行，不存在”绝对安全“。ObfusX 可以显著提升源码的逆向难度，增加安全性。</p>
+</details>
+
+
+    <details>
+      <summary>为什么混淆后的代码比原始源代码大？</summary>
+      <p>ObfusX 使用多种不同的混淆方式保护你的代码，混淆后的代码体积肯定会增加，这是正常现象。</p>
+    </details>
+
+    <details>
+      <summary>混淆是否影响 SEO？</summary>
+      <p>文本拆解伪装、标签语义变异、链接伪装、字符扰乱、锚点干扰这几个混淆项会影响爬虫解析，建议根据实际需求选择。</p>
+    </details>
+
+<details>
+  <summary>ObfusX 能混淆我的 JS 文件吗？</summary>
+  <p>不能。ObfusX 专注于 HTML 页面级混淆，所有处理逻辑都围绕完整网页结构展开。不会对独立 JS 文件进行混淆。建议先使用如 javascript-obfuscator 等工具处理脚本，再将完整页面交由 ObfusX 混淆。</p>
+</details>
+
+    <details>
+      <summary>混淆后能还原代码吗？</summary>
+      <p>ObfusX 的混淆是不可逆的，无法自动还原为原始源码。请在混淆前备份原始文件。</p>
+    </details>
+
+  </div>
+</section>
+
+
+
+
+
+
+
+
+<footer style="   
+    width: 100%;
+    padding: 20px 0;
+    text-align: center;
+    font-size: 14px;
+    color: #888;
+    border-top: 1px solid rgba(39, 51, 103);
+">
+    <p>© 2025 obfusx.com 版权所有</p>
+    <p>版本：v1.0.0 | 作者：ObfusX 团队</p>
+    <p>
+        <a href="https://github.com/obfusx" target="_blank" style="color:#6eaeef;">GitHub</a> |
+        <a href="https://obfusx.toolxp.com/privacy" style="color:#6eaeef;">隐私政策</a>
+    </p>
+</footer>
+
+
+    </div><!-- 通用样式结束 -->
+    <script>
+        function toggleNav() {
+            document.getElementById('navMenu').classList.toggle('active');
+        }
+    </script>
+
+
+<!--
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>--><!-- 用于拖拽排序的库 -->
+<!--
+<script src="https://cdn.jsdelivr.net/npm/javascript-obfuscator@4.1.1/dist/index.browser.min.js"></script>--><!-- 混淆功能的库 -->
+
+
+
+<script defer src="https://obfusx.907000.xyz/obfusx4.min.js"></script>
+
+<script defer src="https://obfusx.907000.xyz/obfusx5.min.js"></script>
+<!-- 自定义混淆模块 -->
+<script defer src="https://obfusx.907000.xyz/obfusx6.min.js"></script>
+
+<script defer src="https://obfusx.907000.xyz/obfusx7.min.js"></script>
+
+</body>
+
+</html>
